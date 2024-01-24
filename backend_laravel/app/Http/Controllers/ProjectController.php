@@ -7,10 +7,19 @@ use App\Models\Project;
 
 class ProjectController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Get all projects
-        $projects = Project::all();
+        $query = Project::query();
+
+        // Search filter
+        if ($request->has('search')) {
+            $query->where('name', 'like', '%' . $request->input('search') . '%');
+            $query->orWhere('status', 'like', '%' . $request->input('search') . '%');
+        }
+
+        // Pagination
+        $projects = $query->paginate(5); // Adjust the per-page count as needed
+
 
         return response()->json(['projects' => $projects]);
     }

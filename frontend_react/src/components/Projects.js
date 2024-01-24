@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AuthUser from './AuthUser';
 import { Table, Pagination, FormControl, Button } from 'react-bootstrap';
 
@@ -8,19 +8,19 @@ export default function Projects() {
   const token = getToken();
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
-  const [filteredProjects, setFilteredProjects] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [projectsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
+  const [pagination, setPagination] = useState(null);
 
   // Function to fetch projects from the API
-  const fetchProjects = async () => {
+  const fetchProjects = async (page = 1, search = '') => {
     try {
-      const response = await http.get('/projects');
-      const projectsData = response.data.projects || [];
+      const response = await http.get(`/projects?page=${page}&search=${search}`);
+      const projectsData = response.data.projects.data || [];
       setProjects(projectsData);
-      // Set filteredProjects initially to all projects
-      setFilteredProjects(projectsData);
+      setPagination(response.data.projects);
+      setCurrentPage(page);
     } catch (error) {
       console.error('Error fetching projects:', error);
     }
@@ -29,27 +29,16 @@ export default function Projects() {
   useEffect(() => {
     // Redirect to login if no token is available
     if (!token) {
-      return <Navigate to="/login" />;
+      navigate('/login');
+    } else {
+      fetchProjects();
     }
-    fetchProjects();
   }, []);
 
-  // Filter projects based on search term
-  useEffect(() => {
-    // Set currentPage to 1 whenever the search term changes
-    setCurrentPage(1);
-
-    // Filter projects when the search term or projects array changes
-    const filtered = projects.filter(
-      (project) =>
-        project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.status.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredProjects(filtered);
-  }, [searchTerm, projects]);
-
   // Function to handle pagination
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const handlePagination = (page) => {
+    fetchProjects(page, searchTerm);
+  };
 
   // Function to handle editing a project
   const handleEdit = (projectId) => {
@@ -66,7 +55,7 @@ export default function Projects() {
         // Delete the project using the API
         await http.delete(`/projects/${projectId}`);
         // Refetch projects after deletion
-        fetchProjects();
+        fetchProjects(currentPage, searchTerm);
         alert('Project deleted successfully!');
       } catch (error) {
         console.error('Error deleting project:', error);
@@ -75,82 +64,89 @@ export default function Projects() {
     }
   };
 
-  // Calculate indices for pagination
-  const indexOfLastProject = currentPage * projectsPerPage;
-  const indexOfFirstProject = indexOfLastProject - projectsPerPage;
+  // Function to handle searching
+  const handleSearch = (e) => {
+    // alert(e.target.value)
+    setSearchTerm(e.target.value);
+    fetchProjects(1, searchTerm);
+  };
 
-  // Only display projects for the current page
-  const currentProjects = Array.isArray(filteredProjects)
-    ? filteredProjects.slice(indexOfFirstProject, indexOfLastProject)
-    : [];
+  return (
+    <div className="container mt-4 table-responsive">
+      <h1 className="mb-4">Projects</h1>
 
-    return (
-      <div className="container mt-4 table-responsive">
-        <h1 className="mb-4">Projects</h1>
-    
-        <Link to="/addProject">
-          <Button variant="success" className="m-1">
-            Add Project
-          </Button>
-        </Link>
-    
-        {/* Search Filter */}
+      <Link to="/addProject">
+        <Button variant="success" className="m-1">
+          Add Project
+        </Button>
+      </Link>
+
+      {/* Search Filter */}
+      <div className="mt-3 d-flex">
         <FormControl
           type="text"
           placeholder="Search projects..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="mt-3"
+          onChange={(e) => handleSearch(e)}
         />
-    
-        {/* Project Table */}
-        <Table striped bordered hover className="mt-3">
-          <thead>
+        {/* <Button variant="primary" className="ml-2" onClick={handleSearch}>
+          Search
+        </Button> */}
+      </div>
+
+      {/* Project Table */}
+      <Table striped bordered hover className="mt-3">
+        <thead>
+          <tr>
+            <th>S. No</th>
+            <th>Project Name</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {projects.length === 0 ? (
             <tr>
-              <th>S. No</th>
-              <th>Project Name</th>
-              <th>Start Date</th>
-              <th>End Date</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <td colSpan="6">No records found</td>
             </tr>
-          </thead>
-          <tbody>
-            {currentProjects.length === 0 ? (
-              <tr>
-                <td colSpan="6">No records found</td>
+          ) : (
+            projects.map((project, index) => (
+              <tr key={index}>
+                <td>{index + 1 + (currentPage - 1) * projectsPerPage}</td>
+                <td>{project.name}</td>
+                <td>{project.start_date}</td>
+                <td>{project.end_date}</td>
+                <td>{project.status}</td>
+                <td>
+                  <Button variant="info" size="sm" className="m-1" onClick={() => handleEdit(project.id)}>
+                    Edit
+                  </Button>
+                  <Button variant="danger" size="sm" onClick={() => handleDelete(project.id)}>
+                    Delete
+                  </Button>
+                </td>
               </tr>
-            ) : (
-              currentProjects.map((project, index) => (
-                <tr key={index}>
-                  <td>{index + 1 + (currentPage - 1) * projectsPerPage}</td>
-                  <td>{project.name}</td>
-                  <td>{project.start_date}</td>
-                  <td>{project.end_date}</td>
-                  <td>{project.status}</td>
-                  <td>
-                    <Button variant="info" size="sm" className="m-1" onClick={() => handleEdit(project.id)}>
-                      Edit
-                    </Button>
-                    <Button variant="danger" size="sm" onClick={() => handleDelete(project.id)}>
-                      Delete
-                    </Button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </Table>
-    
-        {/* Pagination */}
+            ))
+          )}
+        </tbody>
+      </Table>
+
+      {/* Pagination */}
+      {pagination && (
         <Pagination>
-          {Array.from({ length: Math.ceil((filteredProjects || []).length / projectsPerPage) }).map((_, i) => (
-            <Pagination.Item key={i} active={i + 1 === currentPage} onClick={() => paginate(i + 1)}>
+          {Array.from({ length: pagination.last_page }).map((_, i) => (
+            <Pagination.Item
+              key={i}
+              active={i + 1 === pagination.current_page}
+              onClick={() => handlePagination(i + 1)}
+            >
               {i + 1}
             </Pagination.Item>
           ))}
         </Pagination>
-      </div>
-    );
-    
+      )}
+    </div>
+  );
 }

@@ -14,8 +14,9 @@ return [
     | To learn more: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
     |
     */
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'refresh', 'me'],
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'allowed_origins' => ['http://192.168.29.64:3000'],  // Add your frontend URL here
 
     'allowed_methods' => ['*'],
 
