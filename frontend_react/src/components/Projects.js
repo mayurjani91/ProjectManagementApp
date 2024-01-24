@@ -66,9 +66,9 @@ export default function Projects() {
 
   // Function to handle searching
   const handleSearch = (e) => {
-    // alert(e.target.value)
-    setSearchTerm(e.target.value);
-    fetchProjects(1, searchTerm);
+    // alert(e)
+    setSearchTerm(e);
+    fetchProjects(1, e);
   };
 
   return (
@@ -87,7 +87,7 @@ export default function Projects() {
           type="text"
           placeholder="Search projects..."
           value={searchTerm}
-          onChange={(e) => handleSearch(e)}
+          onChange={(e) => handleSearch(e.target.value)}
         />
         {/* <Button variant="primary" className="ml-2" onClick={handleSearch}>
           Search
