@@ -30,5 +30,7 @@ Route::group(['middleware' => 'api'],function(){
     Route::post('logout', [AuthController::class,'logout']);
     Route::post('refresh', [AuthController::class,'refresh']);
     Route::post('me', [AuthController::class,'me']);
+    Route::put('project/update-orders', [ProjectController::class, 'updateOrders']);
+
 
 });

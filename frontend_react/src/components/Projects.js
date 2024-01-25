@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthUser from './AuthUser';
 import { Table, Pagination, FormControl, Button } from 'react-bootstrap';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 export default function Projects() {
   const { getToken, http } = AuthUser();
@@ -55,7 +56,7 @@ export default function Projects() {
         // Delete the project using the API
         await http.delete(`/projects/${projectId}`);
         // Refetch projects after deletion
-        fetchProjects(currentPage, searchTerm);
+        fetchProjects(1, searchTerm);
         alert('Project deleted successfully!');
       } catch (error) {
         console.error('Error deleting project:', error);
@@ -66,11 +67,42 @@ export default function Projects() {
 
   // Function to handle searching
   const handleSearch = (e) => {
-    // alert(e)
     setSearchTerm(e);
     fetchProjects(1, e);
   };
 
+  // Function to handle drag-and-drop
+  const handleDragEnd = async (result) => {
+    if (!result.destination) return;
+
+    const reorderedProjects = Array.from(projects);
+    const [movedProject] = reorderedProjects.splice(result.source.index, 1);
+    reorderedProjects.splice(result.destination.index, 0, movedProject);
+
+    // Update order property based on the new order
+    const updatedProjects = reorderedProjects.map((project, index) => ({
+        ...project,
+        order: index + 1 + (currentPage - 1) * projectsPerPage,
+    }));
+
+    setProjects(updatedProjects);
+
+    // Extract the project IDs and their new order
+    const orderUpdates = updatedProjects.map((project) => ({
+        id: project.id,
+        order: project.order,
+    }));
+
+    // Update the order on the server for all projects
+    try {
+        await http.put(`/project/update-orders`, { projects: orderUpdates });
+    } catch (error) {
+        console.error('Error updating project orders:', error);
+
+        // If there's an error updating the order on the server, you might want to handle it.
+        // You can revert the local state or show an error message to the user.
+    }
+};
   return (
     <div className="container mt-4 table-responsive">
       <h1 className="mb-4">Projects</h1>
@@ -89,49 +121,54 @@ export default function Projects() {
           value={searchTerm}
           onChange={(e) => handleSearch(e.target.value)}
         />
-        {/* <Button variant="primary" className="ml-2" onClick={handleSearch}>
-          Search
-        </Button> */}
       </div>
 
-      {/* Project Table */}
-      <Table striped bordered hover className="mt-3">
-        <thead>
-          <tr>
-            <th>S. No</th>
-            <th>Project Name</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {projects.length === 0 ? (
-            <tr>
-              <td colSpan="6">No records found</td>
-            </tr>
-          ) : (
-            projects.map((project, index) => (
-              <tr key={index}>
-                <td>{index + 1 + (currentPage - 1) * projectsPerPage}</td>
-                <td>{project.name}</td>
-                <td>{project.start_date}</td>
-                <td>{project.end_date}</td>
-                <td>{project.status}</td>
-                <td>
-                  <Button variant="info" size="sm" className="m-1" onClick={() => handleEdit(project.id)}>
-                    Edit
-                  </Button>
-                  <Button variant="danger" size="sm" onClick={() => handleDelete(project.id)}>
-                    Delete
-                  </Button>
-                </td>
-              </tr>
-            ))
+      {/* Project Table with Drag-and-Drop */}
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="projects">
+          {(provided) => (
+            <Table striped bordered hover className="mt-3" ref={provided.innerRef} {...provided.droppableProps}>
+              <thead>
+                <tr>
+                  <th>S. No</th>
+                  <th>Project Name</th>
+                  <th>Start Date</th>
+                  <th>End Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {projects.map((project, index) => (
+                  <Draggable key={project.id} draggableId={project.id.toString()} index={index}>
+                    {(provided) => (
+                      <tr
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                      >
+                        <td>{index + 1 + (currentPage - 1) * projectsPerPage}</td>
+                        <td>{project.name}</td>
+                        <td>{project.start_date}</td>
+                        <td>{project.end_date}</td>
+                        <td>{project.status}</td>
+                        <td>
+                          <Button variant="info" size="sm" className="m-1" onClick={() => handleEdit(project.id)}>
+                            Edit
+                          </Button>
+                          <Button variant="danger" size="sm" onClick={() => handleDelete(project.id)}>
+                            Delete
+                          </Button>
+                        </td>
+                      </tr>
+                    )}
+                  </Draggable>
+                ))}
+              </tbody>
+            </Table>
           )}
-        </tbody>
-      </Table>
+        </Droppable>
+      </DragDropContext>
 
       {/* Pagination */}
       {pagination && (

@@ -18,7 +18,7 @@ class ProjectController extends Controller
         }
 
         // Pagination
-        $projects = $query->paginate(5); // Adjust the per-page count as needed
+        $projects = $query->orderBy('order','Asc')->paginate(5); // Adjust the per-page count as needed
 
 
         return response()->json(['projects' => $projects]);
@@ -59,7 +59,7 @@ class ProjectController extends Controller
             'name' => 'required|string',
             'start_date' => 'required|date',
             'end_date' => 'required|date',
-            'status' => 'required|in:Pending,In Progress,Completed',
+            'status' => 'required|in:Pending,In Progress,Completed'
         ]);
 
         // Find the project
@@ -70,10 +70,24 @@ class ProjectController extends Controller
         }
 
         // Update the project
-        $project->update($request->all());
+        $project->update(['name' => $request->input('name'),
+        'start_date' => $request->input('start_date'),
+        'end_date' => $request->input('end_date'),
+        'status' =>  $request->input('status')]);
 
         return response()->json(['project' => $project]);
     }
+
+    public function updateOrders(Request $request)
+{
+    $projectUpdates = $request->input('projects');
+
+    foreach ($projectUpdates as $update) {
+        Project::where('id', $update['id'])->update(['order' => $update['order']]);
+    }
+
+    return response()->json(['message' => 'Project orders updated successfully']);
+}
 
     public function destroy($id)
     {

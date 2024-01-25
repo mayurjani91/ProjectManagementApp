@@ -70,10 +70,11 @@ const EditProject = () => {
       }
     });
 
-    if (hasErrors) {
-      setErrors({ ...errorFields });
-      return;
-    }
+    // if (hasErrors) {
+    //   console.log({ ...errorFields });
+    //   setErrors({ ...errorFields });
+    //   return;
+    // }
 
     // Check if the start date is before today
     const startDate = new Date(formData.start_date);
