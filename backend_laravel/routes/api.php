@@ -31,6 +31,8 @@ Route::group(['middleware' => 'api'],function(){
     Route::post('refresh', [AuthController::class,'refresh']);
     Route::post('me', [AuthController::class,'me']);
     Route::put('project/update-orders', [ProjectController::class, 'updateOrders']);
+    Route::put('project/{id}/changeFavorite', [ProjectController::class, 'changeFavorite']);
+    Route::get('project/myFavorites', [ProjectController::class, 'myFavorites']);
 
 
 });

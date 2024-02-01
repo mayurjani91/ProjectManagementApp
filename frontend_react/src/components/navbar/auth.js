@@ -8,6 +8,7 @@ import Projects from "../Projects";
 import AuthUser from "../AuthUser";
 import AddProject from "../addProject";
 import EditProject from "../editProject";
+import ViewProject from "../viewProject";
 
 // Main authentication component
 function Auth() {
@@ -78,6 +79,7 @@ function Auth() {
             <Route path="/projects" element={<Projects />} />
             <Route path="/addProject" element={<AddProject />} />
             <Route path="/projects/:projectId/edit" element={<EditProject />} />
+            <Route path="/projects/:projectId/view" element={<ViewProject />} />
           </Routes>
         </div>
       </div>

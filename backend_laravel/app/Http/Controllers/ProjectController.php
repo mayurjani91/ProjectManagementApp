@@ -121,4 +121,27 @@ class ProjectController extends Controller
         'ongoingProjects' => $ongoingProjects,
     ]);
 }
+
+public function changeFavorite($id)
+{
+    $isStared = Project::where('id', $id)->first();
+    if($isStared)
+    {
+        Project::where('id', $id)->update(['stared' => ($isStared->stared == 'No')?'Yes':'No']);
+        $msg = ($isStared->stared == 'No')?'Added to':'Removed from';
+    }
+    else
+    {
+        return response()->json(['error' => 'Project not found'], 404);
+    }
+    return response()->json(['message' => "Project $msg favorite successfully"]);
+}
+
+
+public function myFavorites()
+{
+    $favorite = Project::where('stared', 'Yes')->get();
+
+    return response()->json(['favorite' => $favorite  ]);
+}
 }
