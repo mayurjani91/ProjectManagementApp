@@ -126,7 +126,7 @@ const changeFavorite = async (id) => {
    const response =  await http.put(`/project/${id}/changeFavorite`);
 
     fetchProjects(currentPage, searchTerm);
-  //  alert(response.data.message);
+   alert(response.data.message);
   } catch (error) {
     console.error('Error changing project status:', error);
     // Handle error (show an error message, etc.)
