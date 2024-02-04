@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import AuthUser from './AuthUser';
 import { Card } from 'react-bootstrap';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -11,8 +11,6 @@ export default function Dashboard() {
   const [apiCalled, setApiCalled] = useState(false);
   const [favoriteProjects, setFavoriteProjects] = useState([]);
   const [quickAccessProjects, setQuickAccessProjects] = useState([]);
-  const navigate = useNavigate();
-
 
   useEffect(() => {
     if (!token) {
@@ -23,32 +21,59 @@ export default function Dashboard() {
       http.get('/project/statistics')
         .then((response) => {
           setStatistics(response.data);
-          setFavoriteProjects(response.data.favorite);
-          setQuickAccessProjects(response.data.quick);
           setApiCalled(true);
         })
         .catch((error) => {
           console.error('Error fetching project statistics:', error);
         });
 
+      http.get('/project/myFavorites')
+        .then((response) => {
+          setFavoriteProjects(response.data.favorite);
+        })
+        .catch((error) => {
+          console.error('Error fetching favorite projects:', error);
+        });
+
+      http.get('/project/quickAccess')
+        .then((response) => {
+          setQuickAccessProjects(response.data);
+        })
+        .catch((error) => {
+          console.error('Error fetching quick access projects:', error);
+        });
     }
   }, [token, http, apiCalled]);
 
   const handleDragEnd = (result) => {
-    const { destination, source, draggableId } = result;
-    if (!destination) return; 
+    
+    const { destination, draggableId } = result;
+    alert(JSON.stringify(result));
+    if (!destination) return; // Item was dragged outside of droppable area
   
     // Check if the item was dropped into the Quick Access area
     if (destination.droppableId === 'quick-access') {
+
       const draggedProject = favoriteProjects.find(project => project.id.toString() === draggableId);
       if (draggedProject) {
-        // Send HTTP request to update project's Quick Access status
-        http.put(`/project/${draggedProject.id}/changeQuickAccess`)
+        // Make API call to update project status
+        http.put(`/project/${draggedProject.id}`, { status: 'quick-access' }) // Assuming the API endpoint and payload structure
           .then((response) => {
-            // Fetch updated Quick Access projects from backend
+            // Handle successful response
+            console.log('Project status updated:', response.data);
+            // Update the project status in the state or re-fetch favorite projects
+            // For demonstration, let's assume re-fetching favorite projects and quick access projects
+            http.get('/project/myFavorites')
+              .then((response) => {
+                setFavoriteProjects(response.data.favorite);
+              })
+              .catch((error) => {
+                console.error('Error fetching favorite projects:', error);
+              });
+
             http.get('/project/quickAccess')
               .then((response) => {
-                setQuickAccessProjects(response.data.quick);
+                setQuickAccessProjects(response.data);
               })
               .catch((error) => {
                 console.error('Error fetching quick access projects:', error);
@@ -58,43 +83,25 @@ export default function Dashboard() {
             console.error('Error updating project status:', error);
           });
       }
-    if(quickAccessProjects){
-      // Reorder the Quick Access projects within the frontend
-      const reorderedProjects = Array.from(quickAccessProjects);
-      if (reorderedProjects.length > 1) {
-        const [movedProject] = reorderedProjects.splice(source.index, 1);
-        reorderedProjects.splice(destination.index, 0, movedProject);
-        // Update order property based on the new order
-        const updatedProjects = reorderedProjects.map((project, index) => ({
-          ...project,
-          order: index + 1,
-        }));
-        setQuickAccessProjects(updatedProjects);
-      }
-    }
     }
   };
   
-  const handleView = (projectId) => {
-    navigate(`/projects/${projectId}/view`);
-  };
-
-
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="container mt-4">
-        <h1 className="mb-4">Dashboard</h1>
+    <div className="container mt-4">
+      <h1 className="mb-4">Dashboard</h1>
 
-        <div className="row">
-          <div className="col-md-3 d-flex flex-column" id='quick-access'>
-            <div className="card flex-grow-1" style={{ backgroundColor: 'rgb(171 195 239' }} >
-              <div className="card-body">
-                <h5 className="card-title">Quick Access</h5>
+      <div className="row">
+        <div className="col-md-3 d-flex flex-column">
+          {/* Side section content */}
+          <div className="card flex-grow-1" style={{ backgroundColor: 'rgb(171 195 239'}} >
+            <div className="card-body">
+              <h5 className="card-title">Quick Access</h5>
+              <DragDropContext onDragEnd={handleDragEnd}>
                 <Droppable droppableId="quick-access">
                   {(provided) => (
                     <div {...provided.droppableProps} ref={provided.innerRef}>
                       {quickAccessProjects.map((project, index) => (
-                        <Draggable key={project.id} draggableId={'q-' + (project.id?.toString() ?? '')} index={index}>
+                        <Draggable key={project.id} draggableId={project.id.toString()} index={index}>
                           {(provided) => (
                             <div
                               {...provided.draggableProps}
@@ -103,7 +110,9 @@ export default function Dashboard() {
                             >
                               <Card>
                                 <Card.Body>
-                                  <Card.Title onClick={() => handleView(project.id)}>{project.name}</Card.Title>
+                                  <Card.Title>{project.name}</Card.Title>
+                                  <Card.Text>Status: {project.status}</Card.Text>
+                                  {/* Add more details or buttons here */}
                                 </Card.Body>
                               </Card>
                             </div>
@@ -114,47 +123,49 @@ export default function Dashboard() {
                     </div>
                   )}
                 </Droppable>
-              </div>
+              </DragDropContext>
             </div>
           </div>
+        </div>
 
-          <div className="col-md-8">
-            <div className="row">
-              {statistics && (
-                <>
-                  <div className="col-md-4 mb-4">
-                    <div className="card bg-primary text-white h-100">
-                      <div className="card-body">
-                        <h5 className="card-title">Total Projects</h5>
-                        <p className="card-text">{statistics.totalProjects}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="col-md-4 mb-4">
-                    <div className="card bg-success text-white h-100">
-                      <div className="card-body">
-                        <h5 className="card-title">Completed Projects</h5>
-                        <p className="card-text">{statistics.completedProjects}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="col-md-4 mb-4">
-                    <div className="card bg-warning text-dark h-100">
-                      <div className="card-body">
-                        <h5 className="card-title">Ongoing Projects</h5>
-                        <p className="card-text">{statistics.ongoingProjects}</p>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {favoriteProjects.length > 0 && (
+        <div className="col-md-8">
+          <div className="row">
+            {statistics && (
               <>
-                <h2 className="mt-4">Favorite Projects</h2>
+                <div className="col-md-4 mb-4">
+                  <div className="card bg-primary text-white h-100">
+                    <div className="card-body">
+                      <h5 className="card-title">Total Projects</h5>
+                      <p className="card-text">{statistics.totalProjects}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="col-md-4 mb-4">
+                  <div className="card bg-success text-white h-100">
+                    <div className="card-body">
+                      <h5 className="card-title">Completed Projects</h5>
+                      <p className="card-text">{statistics.completedProjects}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="col-md-4 mb-4">
+                  <div className="card bg-warning text-dark h-100">
+                    <div className="card-body">
+                      <h5 className="card-title">Ongoing Projects</h5>
+                      <p className="card-text">{statistics.ongoingProjects}</p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {favoriteProjects.length > 0 && (
+            <>
+              <h2 className="mt-4">Favorite Projects</h2>
+              <DragDropContext onDragEnd={handleDragEnd}>
                 <Droppable droppableId="favorite-projects">
                   {(provided) => (
                     <div {...provided.droppableProps} ref={provided.innerRef} className="row">
@@ -182,11 +193,11 @@ export default function Dashboard() {
                     </div>
                   )}
                 </Droppable>
-              </>
-            )}
-          </div>
+              </DragDropContext>
+            </>
+          )}
         </div>
       </div>
-    </DragDropContext>
+    </div>
   );
 }

@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
 import AuthUser from './AuthUser';
 
 const ViewProject = () => {
-  const { getToken, http } = AuthUser();
-  const token = getToken();
-  const navigate = useNavigate();
+  const {http } = AuthUser();
   const { projectId } = useParams();
   const [project, setProject] = useState(null);
 
@@ -57,7 +55,12 @@ const ViewProject = () => {
           {/* Return Button */}
           <Link to="/projects">
             <Button variant="secondary" className="m-2">
-              Return
+              Go to Projects
+            </Button>
+          </Link>
+          <Link to="/dashboard">
+            <Button variant="secondary" className="m-2">
+              Go to dashboard
             </Button>
           </Link>
         </div>

@@ -32,7 +32,9 @@ Route::group(['middleware' => 'api'],function(){
     Route::post('me', [AuthController::class,'me']);
     Route::put('project/update-orders', [ProjectController::class, 'updateOrders']);
     Route::put('project/{id}/changeFavorite', [ProjectController::class, 'changeFavorite']);
+    Route::put('project/{id}/changeQuickAccess', [ProjectController::class, 'changeQuickAccess']);
     Route::get('project/myFavorites', [ProjectController::class, 'myFavorites']);
+    Route::get('project/quickAccess', [ProjectController::class, 'quickAccess']);
 
 
 });

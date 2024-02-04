@@ -114,12 +114,15 @@ class ProjectController extends Controller
 
     // Get number of ongoing projects
     $ongoingProjects = Project::where('status', 'In Progress')->count();
+    $favorite = Project::where('stared', 'Yes')->get();
+    $quick = Project::where('quickaccess', 'Yes')->get();
 
     return response()->json([
         'totalProjects' => $totalProjects,
         'completedProjects' => $completedProjects,
         'ongoingProjects' => $ongoingProjects,
-    ]);
+    'favorite' => $favorite,
+'quick'=>  $quick ]);
 }
 
 public function changeFavorite($id)
@@ -136,6 +139,20 @@ public function changeFavorite($id)
     }
     return response()->json(['message' => "Project $msg favorite successfully"]);
 }
+public function changeQuickAccess($id)
+{
+    $isQuickAccess = Project::where('id', $id)->first();
+    if($isQuickAccess)
+    {
+        Project::where('id', $id)->update(['quickaccess' => ($isQuickAccess->quickaccess == 'No')?'Yes':'No']);
+        $msg = ($isQuickAccess->quickaccess == 'No')?'Added to':'Removed from';
+    }
+    else
+    {
+        return response()->json(['error' => 'Project not found'], 404);
+    }
+    return response()->json(['message' => "Project $msg quick access successfully"]);
+}
 
 
 public function myFavorites()
@@ -143,5 +160,11 @@ public function myFavorites()
     $favorite = Project::where('stared', 'Yes')->get();
 
     return response()->json(['favorite' => $favorite  ]);
+}
+public function quickAccess()
+{
+    $quick = Project::where('quickaccess', 'Yes')->get();
+
+    return response()->json(['quick' => $quick  ]);
 }
 }
