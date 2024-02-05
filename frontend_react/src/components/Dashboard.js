@@ -38,44 +38,44 @@ export default function Dashboard() {
     const { destination, source, draggableId } = result;
 
     if (!destination) {
-        return;
-    } 
+      return;
+    }
 
     // Check if the item was dropped into the Quick Access area
     if (destination.droppableId === 'quick-access') {
-        const draggedProject = favoriteProjects.find(project => project.id.toString() === draggableId);
-        if (draggedProject) {
-            // Send HTTP request to update project's Quick Access status
-            http.put(`/project/${draggedProject.id}/changeQuickAccess`)
-                .then((response) => {
-                    // Fetch updated Quick Access projects from backend
-                    http.get('/project/quickAccess')
-                        .then((response) => {
-                            setQuickAccessProjects(response.data.quick);
-                        })
-                        .catch((error) => {
-                            console.error('Error fetching quick access projects:', error);
-                        });
-                })
-                .catch((error) => {
-                    console.error('Error updating project status:', error);
-                });
-        }
-    
-        // Reorder the Quick Access projects within the frontend
-        const reorderedProjects = Array.from(quickAccessProjects);
-        const [movedProject] = reorderedProjects.splice(source.index, 1);
-        reorderedProjects.splice(destination.index, 0, movedProject);
-        // Update order property based on the new order
-        const updatedProjects = reorderedProjects.map((project, index) => ({
-            ...project,
-            order: index + 1,
-        }));
-        setQuickAccessProjects(updatedProjects);
-    }
-};
+      const draggedProject = favoriteProjects.find(project => project.id.toString() === draggableId);
+      if (draggedProject) {
 
-  
+        http.put(`/project/${draggedProject.id}/changeQuickAccess`)
+          .then((response) => {
+            // Fetch updated Quick Access projects from backend
+            http.get('/project/quickAccess')
+              .then((response) => {
+                setQuickAccessProjects(response.data.quick);
+              })
+              .catch((error) => {
+                console.error('Error fetching quick access projects:', error);
+              });
+          })
+          .catch((error) => {
+            console.error('Error updating project status:', error);
+          });
+      }
+
+      // Reorder the Quick Access projects within the frontend
+      const reorderedProjects = Array.from(quickAccessProjects);
+      const [movedProject] = reorderedProjects.splice(source.index, 1);
+      reorderedProjects.splice(destination.index, 0, movedProject);
+      // Update order property based on the new order
+      const updatedProjects = reorderedProjects.map((project, index) => ({
+        ...project,
+        order: index + 1,
+      }));
+      setQuickAccessProjects(updatedProjects);
+    }
+  };
+
+
   const handleView = (projectId) => {
     navigate(`/projects/${projectId}/view`);
   };

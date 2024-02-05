@@ -108,7 +108,6 @@ const EditProject = () => {
       navigate('/projects');
     } catch (error) {
       console.error('Error editing project:', error);
-      // Handle error (show an error message, etc.)
     }
   };
 
