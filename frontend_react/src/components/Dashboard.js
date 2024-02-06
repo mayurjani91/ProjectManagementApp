@@ -177,7 +177,7 @@ export default function Dashboard() {
             <div className="row">
               {statistics && (
                 <>
-                  <div className="col-md-4 mb-4">
+                  <div className="col-md-3 mb-4">
                     <div className="card bg-primary text-white h-100">
                       <div className="card-body">
                         <h5 className="card-title">Total Projects</h5>
@@ -186,10 +186,10 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <div className="col-md-4 mb-4">
+                  <div className="col-md-3 mb-4">
                     <div className="card bg-success text-white h-100">
                       <div className="card-body">
-                        <h5 className="card-title">Completed Projects</h5>
+                        <h5 className="card-title">Completed</h5>
                         <p className="card-text">
                           {statistics.completedProjects}
                         </p>
@@ -197,12 +197,22 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <div className="col-md-4 mb-4">
+                  <div className="col-md-3 mb-4">
                     <div className="card bg-warning text-dark h-100">
                       <div className="card-body">
-                        <h5 className="card-title">Ongoing Projects</h5>
+                        <h5 className="card-title">Ongoing</h5>
                         <p className="card-text">
                           {statistics.ongoingProjects}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-md-3 mb-4">
+                    <div className="card bg-danger text-dark h-100">
+                      <div className="card-body">
+                        <h5 className="card-title">Pending</h5>
+                        <p className="card-text">
+                          {statistics.pendingProjects}
                         </p>
                       </div>
                     </div>

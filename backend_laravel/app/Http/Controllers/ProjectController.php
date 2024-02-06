@@ -114,6 +114,9 @@ class ProjectController extends Controller
 
     // Get number of ongoing projects
     $ongoingProjects = Project::where('status', 'In Progress')->count();
+    // Get number of pending projects
+    $pendingProjects = Project::where('status', 'Pending')->count();
+
     $favorite = Project::where('stared', 'Yes')->get();
     $quick = Project::where('quickaccess', 'Yes')->get();
 
@@ -121,6 +124,7 @@ class ProjectController extends Controller
         'totalProjects' => $totalProjects,
         'completedProjects' => $completedProjects,
         'ongoingProjects' => $ongoingProjects,
+        'pendingProjects' => $pendingProjects,
     'favorite' => $favorite,
 'quick'=>  $quick ]);
 }
