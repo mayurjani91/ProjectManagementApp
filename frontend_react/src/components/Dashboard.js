@@ -50,7 +50,7 @@ export default function Dashboard() {
           .put(`/project/${draggedProject.id}/changeQuickAccess`)
           .then((response) => {
             if (!quickAccessProjects.some((project) => project.id === draggedProject.id)) {
-              
+
             // just updated project list in frontend
             setQuickAccessProjects([...quickAccessProjects, draggedProject]);
             }
@@ -102,6 +102,21 @@ export default function Dashboard() {
       console.error("Error updating project status:", error);
     });
   };
+
+    // Function to determine status color based on status value
+    const getStatusColor = (status) => {
+      switch (status) {
+        case 'Pending':
+          return 'red';
+        case 'In Progress':
+          return 'orange';
+        case 'Completed':
+          return 'green';
+        default:
+          return 'black';
+      }
+    };
+
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
@@ -222,8 +237,8 @@ export default function Dashboard() {
                               <Card>
                                 <Card.Body>
                                   <Card.Title>{project.name}</Card.Title>
-                                  <Card.Text>
-                                    Status: {project.status}
+                                  <Card.Text style={{ color: getStatusColor(project.status), fontWeight:'bolder' }}>
+                                    {project.status}
                                   </Card.Text>
                                   {/* Add more details or buttons here */}
                                 </Card.Body>
