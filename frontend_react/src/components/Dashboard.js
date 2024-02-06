@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
-import AuthUser from './AuthUser';
-import { Card } from 'react-bootstrap';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import React, { useEffect, useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
+import AuthUser from "./AuthUser";
+import { Card } from "react-bootstrap";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 export default function Dashboard() {
   const { getToken, http } = AuthUser();
@@ -13,14 +13,14 @@ export default function Dashboard() {
   const [quickAccessProjects, setQuickAccessProjects] = useState([]);
   const navigate = useNavigate();
 
-
   useEffect(() => {
     if (!token) {
       return <Navigate to="/login" />;
     }
 
     if (!apiCalled) {
-      http.get('/project/statistics')
+      http
+        .get("/project/statistics")
         .then((response) => {
           setStatistics(response.data);
           setFavoriteProjects(response.data.favorite);
@@ -28,9 +28,8 @@ export default function Dashboard() {
           setApiCalled(true);
         })
         .catch((error) => {
-          console.error('Error fetching project statistics:', error);
+          console.error("Error fetching project statistics:", error);
         });
-
     }
   }, [token, http, apiCalled]);
 
@@ -42,23 +41,34 @@ export default function Dashboard() {
     }
 
     // Check if the item was dropped into the Quick Access area
-    if (destination.droppableId === 'quick-access') {
-      const draggedProject = favoriteProjects.find(project => project.id.toString() === draggableId);
-      if (draggedProject) {
-
-        http.put(`/project/${draggedProject.id}/changeQuickAccess`)
+    if (destination.droppableId === "quick-access") {
+      const draggedProject = favoriteProjects.find(
+        (project) => project.id.toString() === draggableId
+        );
+        if (draggedProject) {
+          http
+          .put(`/project/${draggedProject.id}/changeQuickAccess`)
           .then((response) => {
+            if (!quickAccessProjects.some((project) => project.id === draggedProject.id)) {
+              
+            // just updated project list in frontend
+            setQuickAccessProjects([...quickAccessProjects, draggedProject]);
+            }
             // Fetch updated Quick Access projects from backend
-            http.get('/project/quickAccess')
-              .then((response) => {
-                setQuickAccessProjects(response.data.quick);
-              })
-              .catch((error) => {
-                console.error('Error fetching quick access projects:', error);
-              });
+            // http
+            //   .get("/project/quickAccess")
+            //   .then((response) => {
+            //     setQuickAccessProjects(response.data.quick);
+            //   })
+            //   .catch((error) => {
+            //     console.error("Error fetching quick access projects:", error);
+            //     setQuickAccessProjects(
+            //       quickAccessProjects.filter((project) => project.id !== draggedProject)
+            //     );
+            //   });
           })
           .catch((error) => {
-            console.error('Error updating project status:', error);
+            console.error("Error updating project status:", error);
           });
       }
 
@@ -75,11 +85,23 @@ export default function Dashboard() {
     }
   };
 
-
   const handleView = (projectId) => {
     navigate(`/projects/${projectId}/view`);
   };
 
+  const handleRemove = (id) => {
+    http
+    .put(`/project/${id}/removeQuickAccess`)
+    .then((response) => {
+  // alert(response.data.message);
+  const updatedProjects = quickAccessProjects.filter(project => project.id !== id);
+    
+    setQuickAccessProjects(updatedProjects);
+    })
+    .catch((error) => {
+      console.error("Error updating project status:", error);
+    });
+  };
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
@@ -87,15 +109,22 @@ export default function Dashboard() {
         <h1 className="mb-4">Dashboard</h1>
 
         <div className="row">
-          <div className="col-md-3 d-flex flex-column" id='quick-access'>
-            <div className="card flex-grow-1" style={{ backgroundColor: 'rgb(171 195 239' }} >
+          <div className="col-md-3 d-flex flex-column" id="quick-access">
+            <div
+              className="card flex-grow-1"
+              style={{ backgroundColor: "rgb(171 195 239" }}
+            >
               <div className="card-body">
                 <h5 className="card-title">Quick Access</h5>
                 <Droppable droppableId="quick-access">
                   {(provided) => (
                     <div {...provided.droppableProps} ref={provided.innerRef}>
                       {quickAccessProjects.map((project, index) => (
-                        <Draggable key={project.id} draggableId={'q-' + (project.id?.toString() ?? '')} index={index}>
+                        <Draggable
+                          key={project.id}
+                          draggableId={"q-" + (project.id?.toString() ?? "")}
+                          index={index}
+                        >
                           {(provided) => (
                             <div
                               {...provided.draggableProps}
@@ -104,7 +133,17 @@ export default function Dashboard() {
                             >
                               <Card>
                                 <Card.Body>
-                                  <Card.Title onClick={() => handleView(project.id)}>{project.name}</Card.Title>
+                                  <button
+                                    className="close-button"
+                                    onClick={() => handleRemove(project.id)}
+                                    style={{position: "absolute",top: 0,right: 0,padding: "5px",backgroundColor: "transparent",border: "none",cursor: "pointer",color: "red", // Adjust color as needed
+                                    }}
+                                    >X</button>
+                                  <Card.Title
+                                    onClick={() => handleView(project.id)}
+                                  >
+                                    {project.name}
+                                  </Card.Title>
                                 </Card.Body>
                               </Card>
                             </div>
@@ -136,7 +175,9 @@ export default function Dashboard() {
                     <div className="card bg-success text-white h-100">
                       <div className="card-body">
                         <h5 className="card-title">Completed Projects</h5>
-                        <p className="card-text">{statistics.completedProjects}</p>
+                        <p className="card-text">
+                          {statistics.completedProjects}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -145,7 +186,9 @@ export default function Dashboard() {
                     <div className="card bg-warning text-dark h-100">
                       <div className="card-body">
                         <h5 className="card-title">Ongoing Projects</h5>
-                        <p className="card-text">{statistics.ongoingProjects}</p>
+                        <p className="card-text">
+                          {statistics.ongoingProjects}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -158,9 +201,17 @@ export default function Dashboard() {
                 <h2 className="mt-4">Favorite Projects</h2>
                 <Droppable droppableId="favorite-projects">
                   {(provided) => (
-                    <div {...provided.droppableProps} ref={provided.innerRef} className="row">
+                    <div
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                      className="row"
+                    >
                       {favoriteProjects.map((project, index) => (
-                        <Draggable key={project.id} draggableId={project.id.toString()} index={index}>
+                        <Draggable
+                          key={project.id}
+                          draggableId={project.id.toString()}
+                          index={index}
+                        >
                           {(provided) => (
                             <div
                               {...provided.draggableProps}
@@ -171,7 +222,9 @@ export default function Dashboard() {
                               <Card>
                                 <Card.Body>
                                   <Card.Title>{project.name}</Card.Title>
-                                  <Card.Text>Status: {project.status}</Card.Text>
+                                  <Card.Text>
+                                    Status: {project.status}
+                                  </Card.Text>
                                   {/* Add more details or buttons here */}
                                 </Card.Body>
                               </Card>

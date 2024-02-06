@@ -144,8 +144,25 @@ public function changeQuickAccess($id)
     $isQuickAccess = Project::where('id', $id)->first();
     if($isQuickAccess)
     {
-        Project::where('id', $id)->update(['quickaccess' => ($isQuickAccess->quickaccess == 'No')?'Yes':'No']);
-        $msg = ($isQuickAccess->quickaccess == 'No')?'Added to':'Removed from';
+         Project::where('id', $id)->update(['quickaccess' => 'Yes']);
+        $msg = 'Added to';
+        // Project::where('id', $id)->update(['quickaccess' => ($isQuickAccess->quickaccess == 'No')?'Yes':'No']);
+        // $msg = ($isQuickAccess->quickaccess == 'No')?'Added to':'Removed from';
+    }
+    else
+    {
+        return response()->json(['error' => 'Project not found'], 404);
+    }
+    return response()->json(['message' => "Project $msg quick access successfully"]);
+}
+
+public function removeQuickAccess($id)
+{
+    $isQuickAccess = Project::where('id', $id)->first();
+    if($isQuickAccess)
+    {
+         Project::where('id', $id)->update(['quickaccess' => 'No']);
+        $msg = 'Removed to';
     }
     else
     {

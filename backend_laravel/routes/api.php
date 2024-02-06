@@ -33,6 +33,7 @@ Route::group(['middleware' => 'api'],function(){
     Route::put('project/update-orders', [ProjectController::class, 'updateOrders']);
     Route::put('project/{id}/changeFavorite', [ProjectController::class, 'changeFavorite']);
     Route::put('project/{id}/changeQuickAccess', [ProjectController::class, 'changeQuickAccess']);
+    Route::put('project/{id}/removeQuickAccess', [ProjectController::class, 'removeQuickAccess']);
     Route::get('project/myFavorites', [ProjectController::class, 'myFavorites']);
     Route::get('project/quickAccess', [ProjectController::class, 'quickAccess']);
 
